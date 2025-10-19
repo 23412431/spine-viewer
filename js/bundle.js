@@ -292,7 +292,7 @@
         }
         path_list_init() {
             this.path_list_index = 0;
-            this.path_list = ["D:/下载/新建文件夹/",
+            this.path_list = ["./res/",
             ];
         }
     }
