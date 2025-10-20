@@ -1,15 +1,13 @@
 (function () {
     'use strict';
 
-    class SgsSkinViewerSkel {
+    class SgsSkinViewer {
         constructor() {
             this.width = 1800;
-            this.height = 1000;
-            this.height_offset = 50;
+            this.height = 1300;
+            this.height_offset = 100;
+            this.num = 0;
             this.showinfo = 0;
-            this.chuchang2_loaded = false;
-            this.index = 0;
-            this.soundList = [];
             Laya.init(this.width, this.height, Laya["WebGL"]);
             Laya.stage.alignV = "middle";
             Laya.stage.alignH = "center";
@@ -22,15 +20,6 @@
             this.path_list_init();
             this.State_Interactive_on();
             this.load_skin();
-            this.initSoundList();
-        }
-        initSoundList() {
-            this.soundList = [
-                "HeTaiHou_QiLuan_01.mp3",
-                "HeTaiHou_QiLuan_02.mp3",
-                "HeTaiHou_ZhenDu_01.mp3",
-                "HeTaiHou_ZhenDu_02.mp3",
-            ];
         }
         onKeyDown(e) {
             var keyCode = e["keyCode"];
@@ -43,53 +32,41 @@
                     break;
             }
         }
+        mouseWheel(e) {
+            switch (e.delta) {
+                case 3:
+                    this.previous1();
+                    this.num += 1;
+                    break;
+                case -3:
+                    this.next1();
+                    this.num += 1;
+                    break;
+            }
+            var txt = new Laya.Text();
+            txt.text = String(this.num);
+            txt.color = "#ffffff";
+            txt.pos(0, 0);
+            Laya.stage.addChild(txt);
+        }
         load_skin() {
-            this.path = this.path_list[this.path_list_index];
+            var path = this.path_list[this.path_list_index];
+            var beijing_file = path.concat("beijing.sk");
+            var daiji_file = path.concat("daiji.sk");
+            var daiji_tx_file = path.concat("daiji_tx.sk");
             Laya.stage.destroyChildren();
             this.createInteractiveRect();
-            this.load_beijing();
-            this.load_chuchang2();
+            this.beijing = new Laya.Skeleton();
+            Laya.stage.addChild(this.beijing);
+            this.beijing.pos(this.width / 2, this.height / 2 - this.height_offset);
+            this.beijing.load(beijing_file);
+            this.daiji = new Laya.Skeleton();
+            Laya.stage.addChild(this.daiji);
+            this.daiji.pos(this.width / 2, this.height / 2 - this.height_offset);
+            this.daiji.load(daiji_file);
             if (this.showinfo == 1) {
                 this.State_Info();
             }
-        }
-        load_chuchang2() {
-            var chuchang2_file = this.path.concat("chuchang2.skel");
-            this.chuchang2_templet = new Laya.SpineTemplet(Laya.SpineVersion.v4_0);
-            this.chuchang2_templet.on(Laya.Event.COMPLETE, this, this.onChuchang2Loaded);
-            this.chuchang2_templet.loadAni(chuchang2_file);
-        }
-        onChuchang2Loaded() {
-            this.chuchang2_loaded = true;
-            this.chuchang2_skeleton = this.chuchang2_templet.buildArmature();
-            Laya.stage.addChild(this.chuchang2_skeleton);
-            this.chuchang2_skeleton.pos(this.width / 2, this.height / 2 - this.height_offset);
-            this.chuchang2_skeleton.scale(1, 1);
-            this.chuchang2_skeleton.visible = false;
-        }
-        load_beijing() {
-            var beijing_file = this.path.concat("beijing.skel");
-            this.beijing_templet = new Laya.SpineTemplet(Laya.SpineVersion.v4_0);
-            this.beijing_templet.loadAni(beijing_file);
-            this.beijing_templet.on(Laya.Event.COMPLETE, this, this.load_daiji);
-        }
-        load_daiji() {
-            var daiji_file = this.path.concat("daiji.skel");
-            this.daiji_templet = new Laya.SpineTemplet(Laya.SpineVersion.v4_0);
-            this.daiji_templet.loadAni(daiji_file);
-            this.daiji_templet.on(Laya.Event.COMPLETE, this, this.playani);
-        }
-        playani() {
-            this.beijing_skeleton = this.beijing_templet.buildArmature();
-            Laya.stage.addChild(this.beijing_skeleton);
-            this.beijing_skeleton.pos(this.width / 2, this.height / 2 - this.height_offset);
-            this.beijing_skeleton.scale(1, 1);
-            this.beijing_skeleton.play(this.index, true, true);
-            this.daiji_skeleton = this.daiji_templet.buildArmature();
-            Laya.stage.addChild(this.daiji_skeleton);
-            this.daiji_skeleton.pos(this.width / 2, this.height / 2 - this.height_offset);
-            this.daiji_skeleton.scale(1, 1);
-            this.daiji_skeleton.play(this.index, true, true);
         }
         State_Info() {
             var txt = new Laya.Text();
@@ -113,62 +90,58 @@
         }
         State_Interactive_off() {
             Laya.stage.off(Laya.Event.KEY_DOWN, this, this.onKeyDown);
+            Laya.stage.off(Laya.Event.MOUSE_WHEEL, this, this.mouseWheel);
         }
         createInteractiveRect() {
+            var previous_rect1 = new Laya.Sprite();
+            previous_rect1.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
+            previous_rect1.size(this.width / 3, this.height / 3);
+            previous_rect1.x = 0;
+            previous_rect1.y = 0;
+            Laya.stage.addChild(previous_rect1);
+            previous_rect1.on(Laya.Event.MOUSE_DOWN, this, this.previous1);
+            var next_rect1 = new Laya.Sprite();
+            next_rect1.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
+            next_rect1.size(this.width / 3, this.height / 3);
+            next_rect1.x = this.width * 2 / 3;
+            next_rect1.y = 0;
+            Laya.stage.addChild(next_rect1);
+            next_rect1.on(Laya.Event.MOUSE_DOWN, this, this.next1);
+            var previous_rect2 = new Laya.Sprite();
+            previous_rect2.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
+            previous_rect2.size(this.width / 3, this.height / 3);
+            previous_rect2.x = 0;
+            previous_rect2.y = this.height * 2 / 3;
+            Laya.stage.addChild(previous_rect2);
+            previous_rect2.on(Laya.Event.MOUSE_DOWN, this, this.previous2);
+            var next_rect2 = new Laya.Sprite();
+            next_rect2.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
+            next_rect2.size(this.width / 3, this.height / 3);
+            next_rect2.x = this.width * 2 / 3;
+            next_rect2.y = this.height * 2 / 3;
+            Laya.stage.addChild(next_rect2);
+            next_rect2.on(Laya.Event.MOUSE_DOWN, this, this.next2);
+            var pause_rect = new Laya.Sprite();
+            pause_rect.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
+            pause_rect.size(this.width / 3, this.height / 3);
+            pause_rect.x = this.width * 2 / 3;
+            pause_rect.y = this.height * 1 / 3;
+            Laya.stage.addChild(pause_rect);
+            pause_rect.on(Laya.Event.MOUSE_DOWN, this, this.pause);
+            var play_rect = new Laya.Sprite();
+            play_rect.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
+            play_rect.size(this.width / 3, this.height / 3);
+            play_rect.x = 0;
+            play_rect.y = this.height * 1 / 3;
+            Laya.stage.addChild(play_rect);
+            play_rect.on(Laya.Event.MOUSE_DOWN, this, this.play);
             var changeskin_rect = new Laya.Sprite();
             changeskin_rect.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
-            changeskin_rect.size(this.width / 3, this.height);
+            changeskin_rect.size(this.width / 3, this.height / 3);
             changeskin_rect.x = this.width * 1 / 3;
-            changeskin_rect.y = 0;
+            changeskin_rect.y = this.height * 1 / 3;
             Laya.stage.addChild(changeskin_rect);
             changeskin_rect.on(Laya.Event.MOUSE_DOWN, this, this.changeskin);
-            var chuchang2_rect = new Laya.Sprite();
-            chuchang2_rect.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
-            chuchang2_rect.size(this.width / 3, this.height);
-            chuchang2_rect.x = 0;
-            chuchang2_rect.y = 0;
-            Laya.stage.addChild(chuchang2_rect);
-            chuchang2_rect.on(Laya.Event.MOUSE_DOWN, this, this.playChuchang2);
-            var music_rect = new Laya.Sprite();
-            music_rect.graphics.drawRect(0, 0, this.width / 3, this.height / 3, "#000000");
-            music_rect.size(this.width / 3, this.height);
-            music_rect.x = this.width * 2 / 3;
-            music_rect.y = 0;
-            Laya.stage.addChild(music_rect);
-            music_rect.on(Laya.Event.MOUSE_DOWN, this, this.playRandomMusic);
-        }
-        playRandomMusic() {
-            if (this.soundList.length > 0) {
-                if (this.currentSoundChannel) {
-                    this.currentSoundChannel.stop();
-                }
-                const randomIndex = Math.floor(Math.random() * this.soundList.length);
-                const soundFile = this.path + this.soundList[randomIndex];
-                this.currentSoundChannel = Laya.SoundManager.playSound(soundFile, 1);
-                console.log("播放音乐:", this.soundList[randomIndex]);
-            }
-        }
-        playChuchang2() {
-            if (this.chuchang2_loaded && this.chuchang2_skeleton) {
-                if (this.beijing_skeleton)
-                    this.beijing_skeleton.visible = false;
-                if (this.daiji_skeleton)
-                    this.daiji_skeleton.visible = false;
-                const animCount = this.chuchang2_skeleton.getAnimNum();
-                const randomIndex = Math.floor(Math.random() * animCount);
-                this.chuchang2_skeleton.visible = true;
-                this.chuchang2_skeleton.play(randomIndex, false);
-                this.chuchang2_skeleton.once(Laya.Event.STOPPED, this, this.onChuchang2Complete);
-            }
-        }
-        onChuchang2Complete() {
-            if (this.chuchang2_skeleton) {
-                this.chuchang2_skeleton.visible = false;
-            }
-            if (this.beijing_skeleton)
-                this.beijing_skeleton.visible = true;
-            if (this.daiji_skeleton)
-                this.daiji_skeleton.visible = true;
         }
         next1() {
             if (this.path_list_index == this.path_list.length - 1) {
@@ -200,15 +173,27 @@
             this.showinfo = 1;
             this.load_skin();
         }
+        previous2() {
+            if (this.path_list_index == 0) {
+                this.path_list_index = this.path_list.length - 1;
+            }
+            else {
+                this.path_list_index -= 1;
+            }
+            this.showinfo = 1;
+            this.load_skin();
+        }
         play() {
-            this.beijing_skeleton.play(this.index, true, true);
-            this.daiji_skeleton.play(this.index, true, true);
+            this.beijing.play(0, false);
+            this.daiji.play(0, false);
+        }
+        pause() {
+            this.beijing.paused();
+            this.daiji.paused();
         }
         changeskin() {
-            if (++this.index >= this.beijing_skeleton.getAnimNum()) {
-                this.index = 0;
-            }
-            this.play();
+            this.beijing.play(1, true);
+            this.daiji.play(1, true);
         }
         path_list_init() {
             this.path_list_index = 0;
@@ -216,6 +201,6 @@
             ];
         }
     }
-    new SgsSkinViewerSkel();
+    new SgsSkinViewer();
 
 }());
