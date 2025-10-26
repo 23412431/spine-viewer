@@ -4,7 +4,7 @@
     class SgsSkinViewerSkel {
         constructor() {
             this.width = 1800;
-            this.height = 1000;
+            this.height = 850;
             this.height_offset = 50;
             this.showinfo = 0;
             this.chuchang2_loaded = false;
